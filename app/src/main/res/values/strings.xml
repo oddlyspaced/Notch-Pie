@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Notch Pie</string>
+    <string name="app_version">v1.0-stable</string>
+    <string name="service_description">Accessibility service for Notch Pie app so that it could work without any os restrictions.</string>
+    <string name="dialog_positive">Done</string>
+    <string name="dialog_picker_red">Red</string>
+    <string name="dialog_picker_green">Green</string>
+    <string name="dialog_picker_blue">Blue</string>
+    <string name="activity_config_notch_settings_title">Notch Settings</string>
+    <string name="activity_config_height">Height</string>
+    <string name="activity_config_width">Width</string>
+    <string name="activity_config_notch_size">Notch Size</string>
+    <string name="activity_config_notch_radius_bottom">Notch Radius (Bottom)</string>
+    <string name="activity_config_notch_radius_top">Notch Radius (Top)</string>
+    <string name="activity_config_color_settings">Color Settings</string>
+    <string name="popup_accessibility_toast">Please tap on Notch Pie and turn it on!</string>
+    <string name="popup_positive">Allow</string>
+    <string name="popup_negative">Deny</string>
+    <string name="alert_storage_description">In order to save the config files, this app requires access to the internal storage, or else this app will not be able to function</string>
+    <string name="alert_storage_title">Storage Permission</string>
+    <string name="alert_overlay_description">In order to show the overlay this app requires the permission to draw over other apps.</string>
+    <string name="alert_overlay_title">Overlay Permission</string>
+    <string name="alert_overlay_request">Please enable Notch Pie.</string>
+</resources>
