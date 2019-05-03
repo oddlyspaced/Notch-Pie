@@ -1,10 +1,5 @@
 package com.oddlyspaced.np.Utils;
 
-// This class does the following jobs :
-// 1. Get the device name using DeviceName class.
-// 2. Check online and get the data.
-// 3. Save the data to notchpie.data file
-
 import android.os.AsyncTask;
 import android.util.Log;
 
