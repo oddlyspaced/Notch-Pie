@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Notch Pie</string>
     <string name="app_version">v1.0-stable</string>
+    <string name="app_code">5</string>
     <string name="service_description">Accessibility service for Notch Pie app so that it could work without any os restrictions.</string>
     <string name="dialog_positive">Done</string>
     <string name="dialog_picker_red">Red</string>
