@@ -1,16 +1,10 @@
 package com.oddlyspaced.np.Utils;
 
-import android.app.IntentService;
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 import com.oddlyspaced.np.R;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public class NotchConfig {
@@ -23,30 +17,28 @@ public class NotchConfig {
     }
 
     // true : data saved successfully
-    public boolean saveNotchData () {
+    public boolean saveNotchData() {
         try {
             GetNotchConfigTask task = new GetNotchConfigTask(context.getString(R.string.config_url), Integer.parseInt(context.getString(R.string.app_code)), new DeviceName().getDeviceName());
             task.execute();
             return dataToFile(task.get());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.e(TAG, e.toString());
             return false;
         }
     }
 
-    private boolean dataToFile (ArrayList<String> data) {
+    private boolean dataToFile(ArrayList<String> data) {
         try {
-        DataManager dataManager = new DataManager(context);
-        dataManager.read();
-        dataManager.setHeight(Integer.parseInt(data.get(0)));
-        dataManager.setWidht(Integer.parseInt(data.get(1)));
-        dataManager.setNotchSize(Integer.parseInt(data.get(2)));
-        dataManager.setTopRadius(Integer.parseInt(data.get(3)));
-        dataManager.setBottomRadius(Integer.parseInt(data.get(4)));
-        return dataManager.save();
-        }
-        catch (Exception e) {
+            DataManager dataManager = new DataManager(context);
+            dataManager.read();
+            dataManager.setHeight(Integer.parseInt(data.get(0)));
+            dataManager.setWidht(Integer.parseInt(data.get(1)));
+            dataManager.setNotchSize(Integer.parseInt(data.get(2)));
+            dataManager.setTopRadius(Integer.parseInt(data.get(3)));
+            dataManager.setBottomRadius(Integer.parseInt(data.get(4)));
+            return dataManager.save();
+        } catch (Exception e) {
             Log.e(TAG, e.toString());
             return false;
         }

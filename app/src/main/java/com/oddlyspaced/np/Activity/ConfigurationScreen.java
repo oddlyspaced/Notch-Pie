@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -300,7 +301,13 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
             }
         });
         fullStatus = findViewById(R.id.cbFullProgress);
-
+        fullStatus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                dataManager.setFullStatus(isChecked);
+                dataManager.save();
+            }
+        });
         batteryColorView = findViewById(R.id.rvBatteryColor);
     }
 

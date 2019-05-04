@@ -32,15 +32,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // create default config file
-        /*try {
-            File f = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/ok.txt");
-            f.createNewFile();
-            Log.e("efielel", f.getAbsolutePath());
-        }
-        catch (Exception e){
-            Log.e("errrr", e.toString());
-        }*/
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             showStorageAlert();
         } else {
