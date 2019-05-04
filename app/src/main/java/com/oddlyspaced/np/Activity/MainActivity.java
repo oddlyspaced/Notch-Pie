@@ -12,11 +12,13 @@ import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Utils.ColorLevel;
 import com.oddlyspaced.np.Utils.DataManager;
+import com.oddlyspaced.np.Utils.NotchConfig;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -31,6 +33,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // create default config file
+        /*try {
+            File f = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/ok.txt");
+            f.createNewFile();
+            Log.e("efielel", f.getAbsolutePath());
+        }
+        catch (Exception e){
+            Log.e("errrr", e.toString());
+        }*/
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             showStorageAlert();
         } else {

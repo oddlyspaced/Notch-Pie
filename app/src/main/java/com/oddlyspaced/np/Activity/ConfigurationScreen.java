@@ -1,16 +1,21 @@
 package com.oddlyspaced.np.Activity;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -19,6 +24,8 @@ import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Utils.ColorLevel;
 import com.oddlyspaced.np.Utils.ColorPicker;
 import com.oddlyspaced.np.Utils.DataManager;
+import com.oddlyspaced.np.Utils.GetNotchConfigTask;
+import com.oddlyspaced.np.Utils.NotchConfig;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,6 +33,8 @@ import java.util.ArrayList;
 public class ConfigurationScreen extends AppCompatActivity implements ColorPicker.ColorPickerListener, BatteryColorAdapter.onTouchColorLevel {
 
     private SeekBar height, widht, notchSize, notchRadiusB, notchRadiusT;
+    private FloatingActionButton getConfig;
+    private CheckBox fullStatus;
     private DataManager dataManager;
 
     private int[] heightLimit = {50, 500};
@@ -50,9 +59,9 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
     }
 
     private void checkFile() {
-        File dataFile = new File(Environment.getExternalStorageDirectory() + "/notchpie.data");
-        if (!dataFile.exists()) {
-            DataManager dataManager = new DataManager();
+        File dataFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config");
+        if (!dataFile.exists() || dataFile.exists() && dataFile.length() == 0) {
+            DataManager dataManager = new DataManager(this);
             dataManager.setHeight(50);
             dataManager.setWidht(10);
             dataManager.setBottomRadius(0);
@@ -129,7 +138,6 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             dataManager.setColorLevels(levels);
             dataManager.save();
-
         }
     }
 
@@ -139,11 +147,25 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         notchSize = findViewById(R.id.sbNotchSize);
         notchRadiusB = findViewById(R.id.sbBottomRadius);
         notchRadiusT = findViewById(R.id.sbTopRadius);
+        // setting limits
+        height.setMin(heightLimit[0]);
+        height.setMax(heightLimit[1]);
+        widht.setMin(widhtLimit[0]);
+        widht.setMax(widhtLimit[1]);
+        notchSize.setMin(notchSizeLimit[0]);
+        notchSize.setMax(notchSizeLimit[1]);
+        notchRadiusT.setMin(notchRadiusTLimit[0]);
+        notchRadiusT.setMax(notchRadiusTLimit[1]);
+        notchRadiusB.setMin(notchRadiusBLimit[0]);
+        notchRadiusB.setMax(notchRadiusBLimit[1]);
+
         // setting progress
-        dataManager = new DataManager();
+        dataManager = new DataManager(this);
         dataManager.read();
         height.setProgress(dataManager.getHeight());
+        Log.e("heightR", dataManager.getHeight() + "");
         widht.setProgress(dataManager.getWidht());
+        Log.e("widthR", dataManager.getWidht() + "");
         notchSize.setProgress(dataManager.getNotchSize());
         notchRadiusB.setProgress(dataManager.getBottomRadius());
         notchRadiusT.setProgress(dataManager.getTopRadius());
@@ -151,6 +173,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         height.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.e("heightC", progress + "");
                 dataManager.setHeight(progress);
                 dataManager.save();
             }
@@ -168,6 +191,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         widht.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.e("widhtC", progress + "");
                 dataManager.setWidht(progress);
                 dataManager.save();
             }
@@ -233,17 +257,6 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
-        // setting limits
-        height.setMin(heightLimit[0]);
-        height.setMax(heightLimit[1]);
-        widht.setMin(widhtLimit[0]);
-        widht.setMax(widhtLimit[1]);
-        notchSize.setMin(notchSizeLimit[0]);
-        notchSize.setMax(notchSizeLimit[1]);
-        notchRadiusT.setMin(notchRadiusTLimit[0]);
-        notchRadiusT.setMax(notchRadiusTLimit[1]);
-        notchRadiusB.setMin(notchRadiusBLimit[0]);
-        notchRadiusB.setMax(notchRadiusBLimit[1]);
         FloatingActionButton open = findViewById(R.id.fabOpen);
         open.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -253,6 +266,41 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 Toast.makeText(getApplicationContext(), getString(R.string.popup_accessibility_toast), Toast.LENGTH_LONG).show();
             }
         });
+        getConfig = findViewById(R.id.fabConfig);
+        final Context mContext = this;
+        getConfig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(mContext, R.style.DialogTheme);
+                builder.setTitle("Fetch Config?");
+                builder.setMessage("Do you want to fetch a pre made config for your device? Please note that this action will overwrite your current config.");
+                builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        NotchConfig notchConfig = new NotchConfig(getApplicationContext());
+                        if (notchConfig.saveNotchData()) {
+                            Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
+                            finish();
+                            startActivity(new Intent(getApplicationContext(), ConfigurationScreen.class));
+                        }
+                        else {
+                            Toast.makeText(getApplicationContext(), "Device not supported!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                });
+
+                builder.setCancelable(false);
+                builder.show();
+            }
+        });
+        fullStatus = findViewById(R.id.cbFullProgress);
+
         batteryColorView = findViewById(R.id.rvBatteryColor);
     }
 

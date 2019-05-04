@@ -55,7 +55,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
 
 
     private void init() {
-        dataManager = new DataManager();
+        dataManager = new DataManager(this);
         dataManager.read();
         currentRotation = -1; // initial value
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);

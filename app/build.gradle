@@ -6,8 +6,8 @@ android {
         applicationId "com.oddlyspaced.np"
         minSdkVersion 26
         targetSdkVersion 28
-        versionCode 5
-        versionName "1.0-stable"
+        versionCode 6
+        versionName "1.1-stable"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

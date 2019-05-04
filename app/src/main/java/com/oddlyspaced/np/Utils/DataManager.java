@@ -1,5 +1,6 @@
 package com.oddlyspaced.np.Utils;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
@@ -16,8 +17,17 @@ public class DataManager {
 
     private final String TAG = "DataManager";
 
+    private Context context;
+    private final String configPath;
+
     private int height, widht, notchSize, topRadius, bottomRadius;
     private ArrayList<ColorLevel> colorLevels;
+    private boolean fullStatus;
+
+    public DataManager(Context context) {
+        this.context = context;
+        configPath = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config";
+    }
 
     public void setHeight(int height) {
         this.height = height;
@@ -38,39 +48,50 @@ public class DataManager {
     public void setBottomRadius(int bottomRadius) {
         this.bottomRadius = bottomRadius;
     }
+    
+    public void setFullStatus(boolean fullStatus) {
+        this.fullStatus = fullStatus;
+    }
 
     public void setColorLevels(ArrayList<ColorLevel> colorLevels) {
         this.colorLevels = colorLevels;
     }
 
-    public void save() {
+    public boolean save() {
         try {
-            File dataFile = new File(Environment.getExternalStorageDirectory() + "/notchpie.data");
+            File dataFile = new File(configPath);
             PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(dataFile)));
             writer.println(height + "");
             writer.println(widht + "");
             writer.println(notchSize + "");
             writer.println(topRadius + "");
             writer.println(bottomRadius + "");
+            if (fullStatus)
+                writer.println("T");
+            else
+                writer.println("F");
             for (ColorLevel item : colorLevels) {
                 writer.println(item.getColor() + "," + item.getStartLevel() + "," + item.getEndLevel());
             }
             writer.close();
+            return true;
         }
         catch (Exception e) {
             Log.e(TAG, e.toString());
+            return false;
         }
     }
 
     public void read() {
         try {
-            File dataFile = new File(Environment.getExternalStorageDirectory() + "/notchpie.data");
+            File dataFile = new File(configPath);
             BufferedReader reader = new BufferedReader(new FileReader(dataFile));
             height = Integer.parseInt(reader.readLine());
             widht = Integer.parseInt(reader.readLine());
             notchSize = Integer.parseInt(reader.readLine());
             topRadius = Integer.parseInt(reader.readLine());
             bottomRadius = Integer.parseInt(reader.readLine());
+            fullStatus = reader.readLine().equals("T");
             colorLevels = new ArrayList<>();
             while (true) {
                 String s = reader.readLine();
@@ -115,6 +136,10 @@ public class DataManager {
         return colorLevels;
     }
 
+    public boolean isFullStatus() {
+        return fullStatus;
+    }
+
     public boolean isSame (DataManager obj) {
         try {
             if (height != obj.getHeight())
@@ -137,7 +162,7 @@ public class DataManager {
     }
 
     public DataManager get(){
-        DataManager obj = new DataManager();
+        DataManager obj = new DataManager(context);
         obj.setHeight(height);
         obj.setWidht(widht);
         obj.setTopRadius(topRadius);

@@ -15,9 +15,9 @@ public class DeviceName {
         StringTokenizer tokenizer = new StringTokenizer(dn);
         dn = "";
         while (tokenizer.hasMoreTokens())
-            dn.concat(tokenizer.nextToken());
+            dn = dn.concat(tokenizer.nextToken());
         Log.d(TAG, "Device Name : " + dn);
-        return dn;
+        return dn.toLowerCase();
     }
 
     private String exec (String command) {
