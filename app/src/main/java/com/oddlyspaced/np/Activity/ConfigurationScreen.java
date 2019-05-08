@@ -3,35 +3,46 @@ package com.oddlyspaced.np.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.provider.Settings;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.oddlyspaced.np.Adapter.BatteryColorAdapter;
 import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Utils.ColorLevel;
 import com.oddlyspaced.np.Utils.ColorPicker;
 import com.oddlyspaced.np.Utils.DataManager;
-import com.oddlyspaced.np.Utils.GetNotchConfigTask;
 import com.oddlyspaced.np.Utils.NotchConfig;
 
 import java.io.File;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class ConfigurationScreen extends AppCompatActivity implements ColorPicker.ColorPickerListener, BatteryColorAdapter.onTouchColorLevel {
+
+    private static final String TAG = "ConfigurationScreen";
 
     private SeekBar height, widht, notchSize, notchRadiusB, notchRadiusT;
     private FloatingActionButton getConfig;
@@ -48,7 +59,9 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
     private BatteryColorAdapter batteryColorAdapter;
     private ArrayList<ColorLevel> list;
 
+    private int PICKFILE_RESULT_CODE = 4096;
     private int positionTouch = -1;
+    private boolean isMenuOpen = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -258,6 +271,34 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
+        final FloatingActionButton openMenu = findViewById(R.id.fabOpenMenu);
+        final ConstraintLayout menu = findViewById(R.id.layoutMenu);
+        openMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isMenuOpen) {
+                    RotateAnimation rotate = new RotateAnimation(45, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setFillAfter(true);
+                    rotate.setDuration(300);
+                    rotate.setInterpolator(new LinearInterpolator());
+                    openMenu.startAnimation(rotate);
+                    isMenuOpen = false;
+                    menu.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_out));
+                    menu.setVisibility(View.GONE);
+                }
+                else {
+                    // opening menu
+                    RotateAnimation rotate = new RotateAnimation(0, 45, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setFillAfter(true);
+                    rotate.setDuration(300);
+                    rotate.setInterpolator(new LinearInterpolator());
+                    openMenu.startAnimation(rotate);
+                    isMenuOpen = true;
+                    menu.startAnimation(AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_in));
+                    menu.setVisibility(View.VISIBLE);
+                }
+            }
+        });
         FloatingActionButton open = findViewById(R.id.fabOpen);
         open.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -265,6 +306,27 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
                 startActivity(intent);
                 Toast.makeText(getApplicationContext(), getString(R.string.popup_accessibility_toast), Toast.LENGTH_LONG).show();
+            }
+        });
+        FloatingActionButton load = findViewById(R.id.fabLoadConfig);
+        load.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+                chooseFile.setType("*/*");
+                chooseFile = Intent.createChooser(chooseFile, "Choose a file");
+                startActivityForResult(chooseFile, PICKFILE_RESULT_CODE);
+            }
+        });
+        FloatingActionButton save = findViewById(R.id.fabSaveConfig);
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DateFormat dateFormat = DateFormat.getDateTimeInstance();
+                File folder = new File(Environment.getExternalStorageDirectory() + "/NotchPie");
+                folder.mkdirs();
+                dataManager.save(Environment.getExternalStorageDirectory() + "/NotchPie/NP-config-" + dateFormat.format(new Date()));
+                Toast.makeText(getApplicationContext(), "Config saved to internal storage!", Toast.LENGTH_LONG).show();
             }
         });
         getConfig = findViewById(R.id.fabConfig);
@@ -283,8 +345,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                             Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
                             finish();
                             startActivity(new Intent(getApplicationContext(), ConfigurationScreen.class));
-                        }
-                        else {
+                        } else {
                             Toast.makeText(getApplicationContext(), "Device not supported!", Toast.LENGTH_LONG).show();
                         }
                     }
@@ -301,6 +362,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
             }
         });
         fullStatus = findViewById(R.id.cbFullProgress);
+        fullStatus.setChecked(dataManager.isFullStatus());
         fullStatus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -320,7 +382,6 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
     }
 
 
-
     @Override
     public void onColorSet(String color) {
         ColorLevel prev = list.get(positionTouch);
@@ -337,5 +398,86 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         ColorPicker colorPicker = new ColorPicker();
         colorPicker.color = list.get(position).getColor();
         colorPicker.show(getSupportFragmentManager(), "color picker");
+    }
+
+    // https://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == PICKFILE_RESULT_CODE) {
+            try {
+                String pathToConfig = getPath(data.getData());
+                pathToConfig = Environment.getExternalStorageDirectory() + "/" + pathToConfig.substring(pathToConfig.indexOf(":") + 1);
+                DataManager dataManagerLoader = new DataManager(getApplicationContext(), pathToConfig);
+                if (dataManagerLoader.read()) {
+                    showLoaderPopup(dataManagerLoader);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "Not a valid config file!\nError: " + dataManagerLoader.error, Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
+    }
+
+    public String getPath(Uri uri) {
+
+        String path = null;
+        String[] projection = { MediaStore.Files.FileColumns.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+
+        if(cursor == null){
+            path = uri.getPath();
+        }
+        else{
+            cursor.moveToFirst();
+            int column_index = cursor.getColumnIndexOrThrow(projection[0]);
+            path = cursor.getString(column_index);
+            cursor.close();
+        }
+
+        return ((path == null || path.isEmpty()) ? (uri.getPath()) : path);
+    }
+
+    private void showLoaderPopup(final DataManager loader) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogTheme);
+        final String[] loadOptions = {"Notch Configuration", "Color Levels"};
+        final boolean[] loadOptionsChecked = {false, false};
+        builder.setMultiChoiceItems(loadOptions, loadOptionsChecked, new DialogInterface.OnMultiChoiceClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                loadOptionsChecked[which] = isChecked;
+            }
+        });
+        builder.setCancelable(false);
+        builder.setTitle("Choose Modules");
+        builder.setNegativeButton("None", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        builder.setPositiveButton("Load", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (loadOptionsChecked[0]) {
+                    dataManager.setHeight(loader.getHeight());
+                    dataManager.setWidht(loader.getWidht());
+                    dataManager.setNotchSize(loader.getNotchSize());
+                    dataManager.setTopRadius(loader.getTopRadius());
+                    dataManager.setBottomRadius(loader.getBottomRadius());
+                    dataManager.setFullStatus(loader.isFullStatus());
+                }
+                if (loadOptionsChecked[1]) {
+                    dataManager.setColorLevels(loader.getColorLevels());
+                }
+                dataManager.save();
+                startActivity(new Intent(getApplicationContext(), ConfigurationScreen.class));
+                finish();
+                Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
+            }
+        });
+        builder.show();
     }
 }

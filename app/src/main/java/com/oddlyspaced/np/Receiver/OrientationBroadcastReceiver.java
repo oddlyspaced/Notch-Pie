@@ -5,9 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.view.Surface;
-import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.oddlyspaced.np.Service.OverlayAccessibiltyService;
 

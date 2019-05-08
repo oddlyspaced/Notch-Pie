@@ -14,7 +14,7 @@
     <string name="activity_config_notch_size">Notch Size</string>
     <string name="activity_config_notch_radius_bottom">Notch Radius (Bottom)</string>
     <string name="activity_config_notch_radius_top">Notch Radius (Top)</string>
-    <string name="activity_config_color_settings">Color Settings3</string>
+    <string name="activity_config_color_settings">Color Settings</string>
     <string name="activity_config_status_full">Show Full Progress Always</string>
     <string name="popup_accessibility_toast">Please tap on Notch Pie and turn it on!</string>
     <string name="popup_positive">Allow</string>

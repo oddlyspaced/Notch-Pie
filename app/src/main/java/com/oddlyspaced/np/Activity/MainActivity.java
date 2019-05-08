@@ -5,44 +5,39 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Environment;
-import android.provider.Settings;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.provider.Settings;
 import android.widget.Toast;
 
-import com.oddlyspaced.np.R;
-import com.oddlyspaced.np.Utils.ColorLevel;
-import com.oddlyspaced.np.Utils.DataManager;
-import com.oddlyspaced.np.Utils.NotchConfig;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-import java.io.File;
-import java.util.ArrayList;
+import com.oddlyspaced.np.R;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
+    // permission request code for storage access
     private static final int CODE_STORAGE_PERMISSION = 1024;
+    // Permission request code to draw over other apps
+    private static final int CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            showStorageAlert();
-        } else {
-            checkOverlay();
-        }
+        // start permission checking process
+        checkPermissions();
     }
 
-    private void checkOverlay() {
-        if (!Settings.canDrawOverlays(this)) {
-            showOverlayAlert();
-            finish();
+    // this method checks for all permissions
+    private void checkPermissions() {
+        if (!isStoragePermissionGranted()) {
+            notifyStoragePermission();
+        }
+        else if (!canDrawOverlay()) {
+            notifyOverlayPermission();
         }
         else {
             startActivity(new Intent(this, ConfigurationScreen.class));
@@ -50,12 +45,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showStorageAlert() {
+    // this method returns true is permission is granted
+    private boolean isStoragePermissionGranted() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // this method shows an alert dialog notifying the user about storage access
+    private void notifyStoragePermission() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogTheme);
         builder.setPositiveButton(getString(R.string.popup_positive), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                showStoragePopup();
+                requestStoragePermission();
             }
         });
         builder.setCancelable(false);
@@ -70,17 +71,23 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void showStoragePopup() {
+    // this method requests the storage runtime permission
+    private void requestStoragePermission() {
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, CODE_STORAGE_PERMISSION);
-
     }
 
-    private void showOverlayAlert() {
+    // this method check if the app is able to draw overlays
+    private boolean canDrawOverlay () {
+        return Settings.canDrawOverlays(this);
+    }
+
+    // this method shows an alert dialog asking for the permission to draw over other apps
+    private void notifyOverlayPermission() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.DialogTheme);
         builder.setPositiveButton(getString(R.string.popup_positive), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                showOverlayPopup();
+                requestOverlayPermission();
             }
         });
         builder.setCancelable(false);
@@ -95,22 +102,30 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void showOverlayPopup() {
+    // this method opens the activity to allow permission granting
+    private void requestOverlayPermission() {
         Toast.makeText(getApplicationContext(), getString(R.string.alert_overlay_request), Toast.LENGTH_LONG).show();
-        startActivity(new Intent(this, ConfigurationScreen.class));
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
         startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION);
     }
 
+    // this method is called when the app comes to foreground
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkPermissions();
+    }
+
+    // this method is called when a runtime permission is granted
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        switch (requestCode) {
-            case CODE_STORAGE_PERMISSION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    showOverlayAlert();
-                } else {
-                    finish();
-                }
+        // storage permission granted
+        if (requestCode == CODE_STORAGE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkPermissions();
+            } else {
+                // close the app
+                finish();
             }
         }
     }

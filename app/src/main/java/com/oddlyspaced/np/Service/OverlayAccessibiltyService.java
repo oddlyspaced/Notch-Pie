@@ -1,7 +1,6 @@
 package com.oddlyspaced.np.Service;
 
 import android.accessibilityservice.AccessibilityService;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
@@ -15,8 +14,6 @@ import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.os.Environment;
 import android.os.FileObserver;
-import android.os.Looper;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -43,7 +40,8 @@ public class OverlayAccessibiltyService extends AccessibilityService {
     private WindowManager windowManager;
     private View overlayView;
     private FileObserver configOberver;
-    private final String CUSTOM_BROADCAST_ACTION = "ConfigChangedBroadcase";
+    private final String CUSTOM_BROADCAST_ACTION = "ConfigChangedBroadcast";
+    private boolean isPortrait = true;
 
     private OrientationBroadcastReceiver receiverOrientation;
     private BatteryBroadcastReceiver receiverBattery;
@@ -67,7 +65,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         configOberver = new FileObserver(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config") {
             @Override
             public void onEvent(int event, @Nullable String path) {
-                if (event == MODIFY) {
+                if (event == MODIFY && isPortrait) {
                     Intent intent = new Intent(CUSTOM_BROADCAST_ACTION);
                     sendBroadcast(intent);
                 }
@@ -80,11 +78,13 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         receiverOrientation = new OrientationBroadcastReceiver(new OnRotate() {
             @Override
             public void onPortrait() {
+                isPortrait = true;
                 makeOverlay();
             }
 
             @Override
             public void onLandscape() {
+                isPortrait = false;
                 removeOverlay();
             }
         });
@@ -93,7 +93,9 @@ public class OverlayAccessibiltyService extends AccessibilityService {
             @Override
             public void onChanged(int battery) {
                 batteryLevel = battery;
-                makeOverlay();
+                if (isPortrait) {
+                    makeOverlay();
+                }
             }
         });
         IntentFilter intentFilterBattery = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -125,8 +127,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
             // if this gives an error then its probably because wm is empty
             try {
                 windowManager.addView(overlayView, generateParams(bitmap.getHeight(), bitmap.getWidth()));
-            }
-            catch (Exception ee) {
+            } catch (Exception ee) {
                 Log.e("why tho", ee.toString());
             }
         }
@@ -303,6 +304,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
     // Interface for rotation handling
     public interface OnRotate {
         void onPortrait();
+
         void onLandscape();
     }
 
@@ -311,6 +313,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         void onChanged(int battery);
     }
 
+    // Interface for handling config changes.
     public interface OnConfigEdited {
         void onEdited();
     }
