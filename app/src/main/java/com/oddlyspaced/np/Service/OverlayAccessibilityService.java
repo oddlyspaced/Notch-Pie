@@ -24,6 +24,9 @@ import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 
+import com.oddlyspaced.np.Interface.OnBatteryLevelChanged;
+import com.oddlyspaced.np.Interface.OnConfigEdited;
+import com.oddlyspaced.np.Interface.OnRotate;
 import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Receiver.BatteryBroadcastReceiver;
 import com.oddlyspaced.np.Receiver.FileBroadcastReceiver;
@@ -31,15 +34,15 @@ import com.oddlyspaced.np.Receiver.OrientationBroadcastReceiver;
 import com.oddlyspaced.np.Utils.ColorLevel;
 import com.oddlyspaced.np.Utils.DataManager;
 
-
-public class OverlayAccessibiltyService extends AccessibilityService {
+// The Service class to show and handle the overlay
+public class OverlayAccessibilityService extends AccessibilityService {
 
     private DataManager dataManager;
     private int statusbarHeight;
     private int batteryLevel;
     private WindowManager windowManager;
     private View overlayView;
-    private FileObserver configOberver;
+    private FileObserver configObserver;
     private final String CUSTOM_BROADCAST_ACTION = "ConfigChangedBroadcast";
     private boolean isPortrait = true;
 
@@ -47,6 +50,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
     private BatteryBroadcastReceiver receiverBattery;
     private FileBroadcastReceiver receiverConfig;
 
+    // Executed when service started
     @Override
     protected void onServiceConnected() {
         Log.d("Overlay", "Starting Overlay");
@@ -54,15 +58,18 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         startReceivers();
     }
 
-
+    // this method initialises every variable to be used
     private void init() {
-        dataManager = new DataManager(this);
+        dataManager = new DataManager();
         dataManager.read();
+        // getting the window manager
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         statusbarHeight = getStatusBarHeight();
+        // the parent image view in which the bitmap is set
         overlayView = LayoutInflater.from(this).inflate(R.layout.layout_float, null); // the view which will be overlayed
         overlayView.setRotationY(180); // mirroring
-        configOberver = new FileObserver(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config") {
+        // the observer which sends broadcast intents
+        configObserver = new FileObserver(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config") {
             @Override
             public void onEvent(int event, @Nullable String path) {
                 if (event == MODIFY && isPortrait) {
@@ -71,9 +78,11 @@ public class OverlayAccessibiltyService extends AccessibilityService {
                 }
             }
         };
-        configOberver.startWatching();
+        // start observer
+        configObserver.startWatching();
     }
 
+    // this method starts and initialises every receiver to be uses in service
     private void startReceivers() {
         receiverOrientation = new OrientationBroadcastReceiver(new OnRotate() {
             @Override
@@ -89,7 +98,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
             }
         });
         IntentFilter intentFilterOrientation = new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED);
-        receiverBattery = new BatteryBroadcastReceiver(new OnBatteryChanged() {
+        receiverBattery = new BatteryBroadcastReceiver(new OnBatteryLevelChanged() {
             @Override
             public void onChanged(int battery) {
                 batteryLevel = battery;
@@ -112,7 +121,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         registerReceiver(receiverConfig, intentFilterConfig);
     }
 
-    // Overlay Makers //
+    // this method acts as a main method and calls the sub methods to get the overlay done and applied it aswell
     private void makeOverlay() {
         Bitmap bitmap = drawNotch();
         ImageView img = overlayView.findViewById(R.id.imageView);
@@ -133,14 +142,19 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         }
     }
 
+    // this method removes the overlay from the view
     private void removeOverlay() {
         try {
-            windowManager.removeView(overlayView); // errrorrrororoorroorr
+            windowManager.removeView(overlayView); // this will error out if wm is already empty
         } catch (Exception e) {
             // such haxx much wow
         }
     }
 
+    // this method draws the notch shape
+    // please don't ask me how it works now
+    // i kinda forgot myself
+    // it just works so i am not commenting out anything in it.
     private Bitmap drawNotch() {
         int w = getWidht();
         int h = getHeight();
@@ -177,7 +191,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         rectF.height();
 
         Bitmap bitmap = Bitmap.createBitmap(
-                //screenWidht,
+                //screenWidth,
                 (int) Math.abs(rectF.width()),
                 (int) Math.abs(rectF.height()) + 10,// , // Height
                 Bitmap.Config.ARGB_8888 // Config
@@ -196,11 +210,9 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         Canvas canvas = new Canvas(bitmap);
         canvas.drawPath(path, paint);
         return bitmap;
-        //windowManager.updateViewLayout(overlayView, generateParamsPo((int)Math.abs(rectF.height()), (int)Math.abs(rectF.width())));
     }
 
-    // Layout Parameter Generators //
-
+    // this method generates the layout parameters for the overlay to rise above the status bar limits
     private WindowManager.LayoutParams generateParams(int h, int w) {
         int layoutParameters = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS |
@@ -213,15 +225,15 @@ public class OverlayAccessibiltyService extends AccessibilityService {
                 PixelFormat.TRANSLUCENT);
         p.gravity = Gravity.TOP | Gravity.CENTER;
         //setting boundary
-        p.y = -statusbarHeight - 10;
+        p.y = -statusbarHeight - 10; // -10 just in case
         return p;
     }
 
     // Array Generators //
-
+    // this method generates the color palette depending upon the config
     private int[] getColorArray(int battery, boolean isFullStatus) {
         int[] c = new int[181];
-        if (isFullStatus) {
+        if (isFullStatus) { // fill the overlay with one color
             for (ColorLevel item : dataManager.getColorLevels()) {
                 if (battery >= item.getStartLevel() && battery <= item.getEndLevel()) {
                     for (int i = 0; i < 181; i++) {
@@ -229,9 +241,9 @@ public class OverlayAccessibiltyService extends AccessibilityService {
                     }
                 }
             }
-        } else {
+        } else { // need partially filler overlay
             for (int i = 0; i < 181; i++)
-                c[i] = Color.parseColor("#000000");
+                c[i] = Color.TRANSPARENT;
             for (ColorLevel item : dataManager.getColorLevels()) {
                 if (battery >= item.getStartLevel() && battery <= item.getEndLevel()) {
                     int val = (int) ((battery / 100.0) * 180.0);
@@ -244,6 +256,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         return c;
     }
 
+    // this method generates an evenly spread position point array
     private float[] getPositionArray() {
         float a = 0.5F / 180;
         float c = 0;
@@ -273,7 +286,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
     }
 
     private int getWidht() {
-        return dataManager.getWidht();
+        return dataManager.getWidth();
     }
 
     private int getNotchSize() {
@@ -298,24 +311,7 @@ public class OverlayAccessibiltyService extends AccessibilityService {
         unregisterReceiver(receiverOrientation);
         unregisterReceiver(receiverBattery);
         unregisterReceiver(receiverConfig);
-        configOberver.stopWatching();
-    }
-
-    // Interface for rotation handling
-    public interface OnRotate {
-        void onPortrait();
-
-        void onLandscape();
-    }
-
-    // Interface for handling battery level change
-    public interface OnBatteryChanged {
-        void onChanged(int battery);
-    }
-
-    // Interface for handling config changes.
-    public interface OnConfigEdited {
-        void onEdited();
+        configObserver.stopWatching();
     }
 
 }

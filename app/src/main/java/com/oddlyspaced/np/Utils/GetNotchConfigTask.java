@@ -8,16 +8,16 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 
+// AsyncTask to fetch notch data from raw webpage
 public class GetNotchConfigTask extends AsyncTask<Void, Void, ArrayList<String>> {
 
     private String link;
     private int versionCode;
     private String deviceName;
-    private ArrayList<String> data;
     private static final String TAG = "GetNotchConfigTask";
 
+    // constructor
     public GetNotchConfigTask(String link, int versionCode, String deviceName) {
-        super();
         this.link = link;
         this.versionCode = versionCode;
         this.deviceName = deviceName;
@@ -29,7 +29,7 @@ public class GetNotchConfigTask extends AsyncTask<Void, Void, ArrayList<String>>
 
     @Override
     protected ArrayList<String> doInBackground(Void... voids) {
-        data = new ArrayList<>();
+        ArrayList<String> data = new ArrayList<>();
         try {
             URL url = new URL(link + deviceName + versionCode);
             BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));

@@ -16,6 +16,8 @@ import androidx.core.content.ContextCompat;
 
 import com.oddlyspaced.np.R;
 
+// Main Activity for app
+// App starts from here
 public class MainActivity extends AppCompatActivity {
 
     // permission request code for storage access
@@ -35,11 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private void checkPermissions() {
         if (!isStoragePermissionGranted()) {
             notifyStoragePermission();
-        }
-        else if (!canDrawOverlay()) {
+        } else if (!canDrawOverlay()) {
             notifyOverlayPermission();
-        }
-        else {
+        } else {
             startActivity(new Intent(this, ConfigurationScreen.class));
             finish();
         }
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // this method check if the app is able to draw overlays
-    private boolean canDrawOverlay () {
+    private boolean canDrawOverlay() {
         return Settings.canDrawOverlays(this);
     }
 

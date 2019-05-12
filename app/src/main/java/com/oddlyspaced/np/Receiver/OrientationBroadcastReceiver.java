@@ -1,21 +1,21 @@
 package com.oddlyspaced.np.Receiver;
 
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 
-import com.oddlyspaced.np.Service.OverlayAccessibiltyService;
+import com.oddlyspaced.np.Interface.OnRotate;
 
 // Copied from : https://stackoverflow.com/questions/36086320/android-get-the-screen-rotation-from-a-broadcastreceiver
-
+// Receiver for receiving orientation changes
 public class OrientationBroadcastReceiver extends BroadcastReceiver {
 
     // Interface
-    private OverlayAccessibiltyService.OnRotate onRotateInterface;
+    private OnRotate onRotateInterface;
 
-    public OrientationBroadcastReceiver(OverlayAccessibiltyService.OnRotate onRotateInterface) {
+    // Constructor
+    public OrientationBroadcastReceiver(OnRotate onRotateInterface) {
         this.onRotateInterface = onRotateInterface;
     }
 

@@ -10,36 +10,46 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.oddlyspaced.np.Interface.OnTouchColorLevel;
 import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Utils.ColorLevel;
 
 import java.util.ArrayList;
 
+// RecyclerView Adapter for the color level list
 public class BatteryColorAdapter extends RecyclerView.Adapter<BatteryColorAdapter.ViewHolder> {
 
+    // Required items
+    // ui context
     private Context context;
+    // array list of items for colors
     private ArrayList<ColorLevel> list;
-    private onTouchColorLevel listener;
+    // the onClick listener for the color items/levels
+    private OnTouchColorLevel listener;
 
+    // parametrized constructor
     public BatteryColorAdapter(Context context, ArrayList<ColorLevel> list) {
         this.context = context;
         this.list = list;
     }
 
+    // Called when RecyclerView in drawn in UI
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // checking if listener overridden
         try {
-            listener = (onTouchColorLevel) parent.getContext();
-        }
-        catch (ClassCastException e) {
+            listener = (OnTouchColorLevel) parent.getContext();
+        } catch (ClassCastException e) {
             throw new ClassCastException(context.toString() + " must implement on touch listener!");
         }
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        View v = inflater.inflate(R.layout.layout_color_list, parent,false);
+        View v = inflater.inflate(R.layout.layout_color_list, parent, false);
         return new ViewHolder(v);
     }
 
+    // Called when data is bound to the items
+    // --when the list items are being loaded--
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         ColorLevel item = list.get(position);
@@ -59,23 +69,22 @@ public class BatteryColorAdapter extends RecyclerView.Adapter<BatteryColorAdapte
         return list.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    // constructor / defining class for the list items
+    class ViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView start, end;
-        public View color, touch;
+        // defining the modifiable items of the item view
+        TextView start, end;
+        View color, touch;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
 
+            // giving context
             start = itemView.findViewById(R.id.txRecyclerViewStartPercentage);
             end = itemView.findViewById(R.id.txRecyclerViewEndPercentage);
             color = itemView.findViewById(R.id.viewRecyclerViewColor);
             touch = itemView.findViewById(R.id.viewRecyclerViewTouch);
         }
-    }
-
-    public interface onTouchColorLevel{
-        void onTouchItem(int position);
     }
 
 }

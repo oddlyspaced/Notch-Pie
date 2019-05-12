@@ -3,20 +3,21 @@ package com.oddlyspaced.np.Receiver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.BatteryManager;
-import android.widget.Toast;
 
-import com.oddlyspaced.np.Service.OverlayAccessibiltyService;
+import com.oddlyspaced.np.Interface.OnConfigEdited;
 
+// Broadcast Receiver for receiving FileUpdates
 public class FileBroadcastReceiver extends BroadcastReceiver {
 
     // Interface
-    private OverlayAccessibiltyService.OnConfigEdited onConfigEditedInterface;
+    private OnConfigEdited onConfigEditedInterface;
 
-    public FileBroadcastReceiver(OverlayAccessibiltyService.OnConfigEdited onConfigEditedInterface) {
+    // Constructor
+    public FileBroadcastReceiver(OnConfigEdited onConfigEditedInterface) {
         this.onConfigEditedInterface = onConfigEditedInterface;
     }
 
+    // here onReceive is called when file is modified
     @Override
     public void onReceive(Context context, Intent intent) {
         onConfigEditedInterface.onEdited();

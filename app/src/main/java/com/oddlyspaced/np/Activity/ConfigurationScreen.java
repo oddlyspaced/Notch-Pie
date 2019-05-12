@@ -29,28 +29,29 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.oddlyspaced.np.Adapter.BatteryColorAdapter;
+import com.oddlyspaced.np.Interface.ColorPickerListener;
+import com.oddlyspaced.np.Interface.OnTouchColorLevel;
 import com.oddlyspaced.np.R;
 import com.oddlyspaced.np.Utils.ColorLevel;
 import com.oddlyspaced.np.Utils.ColorPicker;
 import com.oddlyspaced.np.Utils.DataManager;
-import com.oddlyspaced.np.Utils.NotchConfig;
+import com.oddlyspaced.np.Utils.NotchConfigHandler;
 
 import java.io.File;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ConfigurationScreen extends AppCompatActivity implements ColorPicker.ColorPickerListener, BatteryColorAdapter.onTouchColorLevel {
+// Configuration Screen activity class
+// https://www.youtube.com/watch?v=LdH7aFjDzjI
+public class ConfigurationScreen extends AppCompatActivity implements ColorPickerListener, OnTouchColorLevel {
 
     private static final String TAG = "ConfigurationScreen";
 
-    private SeekBar height, widht, notchSize, notchRadiusB, notchRadiusT;
-    private FloatingActionButton getConfig;
-    private CheckBox fullStatus;
     private DataManager dataManager;
 
     private int[] heightLimit = {50, 500};
-    private int[] widhtLimit = {1, 500};
+    private int[] widthLimit = {1, 500};
     private int[] notchSizeLimit = {1, 500};
     private int[] notchRadiusBLimit = {0, 100};
     private int[] notchRadiusTLimit = {0, 100};
@@ -72,12 +73,13 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         loadRecycler();
     }
 
+    // checks if config exists or not, if it doesn't then it makes it
     private void checkFile() {
         File dataFile = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) + "/config");
         if (!dataFile.exists() || dataFile.exists() && dataFile.length() == 0) {
-            DataManager dataManager = new DataManager(this);
+            DataManager dataManager = new DataManager();
             dataManager.setHeight(50);
-            dataManager.setWidht(10);
+            dataManager.setWidth(10);
             dataManager.setBottomRadius(0);
             dataManager.setTopRadius(0);
             dataManager.setNotchSize(0);
@@ -155,17 +157,18 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         }
     }
 
+    // initialise views
     private void initViews() {
-        height = findViewById(R.id.sbHeight);
-        widht = findViewById(R.id.sbWidht);
-        notchSize = findViewById(R.id.sbNotchSize);
-        notchRadiusB = findViewById(R.id.sbBottomRadius);
-        notchRadiusT = findViewById(R.id.sbTopRadius);
+        SeekBar height = findViewById(R.id.sbHeight);
+        SeekBar widht = findViewById(R.id.sbWidht);
+        SeekBar notchSize = findViewById(R.id.sbNotchSize);
+        SeekBar notchRadiusB = findViewById(R.id.sbBottomRadius);
+        SeekBar notchRadiusT = findViewById(R.id.sbTopRadius);
         // setting limits
         height.setMin(heightLimit[0]);
         height.setMax(heightLimit[1]);
-        widht.setMin(widhtLimit[0]);
-        widht.setMax(widhtLimit[1]);
+        widht.setMin(widthLimit[0]);
+        widht.setMax(widthLimit[1]);
         notchSize.setMin(notchSizeLimit[0]);
         notchSize.setMax(notchSizeLimit[1]);
         notchRadiusT.setMin(notchRadiusTLimit[0]);
@@ -174,12 +177,12 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         notchRadiusB.setMax(notchRadiusBLimit[1]);
 
         // setting progress
-        dataManager = new DataManager(this);
+        dataManager = new DataManager();
         dataManager.read();
         height.setProgress(dataManager.getHeight());
         Log.e("heightR", dataManager.getHeight() + "");
-        widht.setProgress(dataManager.getWidht());
-        Log.e("widthR", dataManager.getWidht() + "");
+        widht.setProgress(dataManager.getWidth());
+        Log.e("widthR", dataManager.getWidth() + "");
         notchSize.setProgress(dataManager.getNotchSize());
         notchRadiusB.setProgress(dataManager.getBottomRadius());
         notchRadiusT.setProgress(dataManager.getTopRadius());
@@ -202,11 +205,12 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
+
         widht.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 Log.e("widhtC", progress + "");
-                dataManager.setWidht(progress);
+                dataManager.setWidth(progress);
                 dataManager.save();
             }
 
@@ -220,6 +224,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
+
         notchSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -237,6 +242,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
+
         notchRadiusB.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -254,6 +260,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
+
         notchRadiusT.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -271,8 +278,9 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
 
             }
         });
-        final FloatingActionButton openMenu = findViewById(R.id.fabOpenMenu);
+
         final ConstraintLayout menu = findViewById(R.id.layoutMenu);
+        final FloatingActionButton openMenu = findViewById(R.id.fabOpenMenu);
         openMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -299,6 +307,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 }
             }
         });
+
         FloatingActionButton open = findViewById(R.id.fabOpen);
         open.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -308,6 +317,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 Toast.makeText(getApplicationContext(), getString(R.string.popup_accessibility_toast), Toast.LENGTH_LONG).show();
             }
         });
+
         FloatingActionButton load = findViewById(R.id.fabLoadConfig);
         load.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -318,6 +328,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 startActivityForResult(chooseFile, PICKFILE_RESULT_CODE);
             }
         });
+
         FloatingActionButton save = findViewById(R.id.fabSaveConfig);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -329,7 +340,8 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 Toast.makeText(getApplicationContext(), "Config saved to internal storage!", Toast.LENGTH_LONG).show();
             }
         });
-        getConfig = findViewById(R.id.fabConfig);
+
+        FloatingActionButton getConfig = findViewById(R.id.fabConfig);
         final Context mContext = this;
         getConfig.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -340,8 +352,8 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        NotchConfig notchConfig = new NotchConfig(getApplicationContext());
-                        if (notchConfig.saveNotchData()) {
+                        NotchConfigHandler notchConfigHandler = new NotchConfigHandler();
+                        if (notchConfigHandler.saveFetchNotchData()) {
                             Toast.makeText(getApplicationContext(), "Done", Toast.LENGTH_LONG).show();
                             finish();
                             startActivity(new Intent(getApplicationContext(), ConfigurationScreen.class));
@@ -361,7 +373,8 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 builder.show();
             }
         });
-        fullStatus = findViewById(R.id.cbFullProgress);
+
+        CheckBox fullStatus = findViewById(R.id.cbFullProgress);
         fullStatus.setChecked(dataManager.isFullStatus());
         fullStatus.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -373,6 +386,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         batteryColorView = findViewById(R.id.rvBatteryColor);
     }
 
+    // loads and handles the recycler view
     private void loadRecycler() {
         batteryColorView.setHasFixedSize(true);
         batteryColorView.setLayoutManager(new LinearLayoutManager(this));
@@ -381,7 +395,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
         batteryColorView.setAdapter(batteryColorAdapter);
     }
 
-
+    // override the implemented interfaces
     @Override
     public void onColorSet(String color) {
         ColorLevel prev = list.get(positionTouch);
@@ -401,14 +415,21 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
     }
 
     // https://stackoverflow.com/questions/30789116/implementing-a-file-picker-in-android-and-copying-the-selected-file-to-another-l
-
+    // https://stackoverflow.com/questions/13209494/how-to-get-the-full-file-path-from-uri
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == PICKFILE_RESULT_CODE) {
             try {
-                String pathToConfig = getPath(data.getData());
-                pathToConfig = Environment.getExternalStorageDirectory() + "/" + pathToConfig.substring(pathToConfig.indexOf(":") + 1);
-                DataManager dataManagerLoader = new DataManager(getApplicationContext(), pathToConfig);
+                Uri uri = data.getData();
+                File file = new File(uri.getPath());//create path from uri
+                final String[] split = file.getPath().split(":");//split the path.
+                String pathToConfig = split[1];//assign it to a string(your choice).
+                if (!pathToConfig.startsWith("/")) {
+                    pathToConfig = Environment.getExternalStorageDirectory() + "/" + pathToConfig;
+                }
+                Toast.makeText(getApplicationContext(), pathToConfig, Toast.LENGTH_LONG).show();
+                ///
+                DataManager dataManagerLoader = new DataManager(pathToConfig);
                 if (dataManagerLoader.read()) {
                     showLoaderPopup(dataManagerLoader);
                 }
@@ -419,25 +440,6 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
                 Log.e(TAG, e.toString());
             }
         }
-    }
-
-    public String getPath(Uri uri) {
-
-        String path = null;
-        String[] projection = { MediaStore.Files.FileColumns.DATA };
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-
-        if(cursor == null){
-            path = uri.getPath();
-        }
-        else{
-            cursor.moveToFirst();
-            int column_index = cursor.getColumnIndexOrThrow(projection[0]);
-            path = cursor.getString(column_index);
-            cursor.close();
-        }
-
-        return ((path == null || path.isEmpty()) ? (uri.getPath()) : path);
     }
 
     private void showLoaderPopup(final DataManager loader) {
@@ -463,7 +465,7 @@ public class ConfigurationScreen extends AppCompatActivity implements ColorPicke
             public void onClick(DialogInterface dialog, int which) {
                 if (loadOptionsChecked[0]) {
                     dataManager.setHeight(loader.getHeight());
-                    dataManager.setWidht(loader.getWidht());
+                    dataManager.setWidth(loader.getWidth());
                     dataManager.setNotchSize(loader.getNotchSize());
                     dataManager.setTopRadius(loader.getTopRadius());
                     dataManager.setBottomRadius(loader.getBottomRadius());

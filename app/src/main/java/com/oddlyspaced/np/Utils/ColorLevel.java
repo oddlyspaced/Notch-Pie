@@ -1,5 +1,6 @@
 package com.oddlyspaced.np.Utils;
 
+// Modal Class for storing color level data
 public class ColorLevel {
 
     private int startLevel, endLevel;
